@@ -8,7 +8,32 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/zangar-tm/movie_trailer_bot/imdb"
 )
+
+type BotMessage struct {
+	ChatId int    `json:"chat_id"`
+	Text   string `json:"text"`
+}
+
+type Chat struct {
+	ChatId int `json:"id"`
+}
+
+type Message struct {
+	Chat Chat   `json:"chat"`
+	Text string `json:"text"`
+}
+
+type Update struct {
+	UpdateId int     `json:"update_id"`
+	Message  Message `json:"message"`
+}
+
+type RestResponse struct {
+	Result []Update `json:"result"`
+}
 
 func main() {
 	botToken := "2020333417:AAESGYlh9fVVLPixWRXxjF2kFLPbtvaif8s"
@@ -51,7 +76,11 @@ func getUpdates(botUrl string, offset int) ([]Update, error) {
 func respond(botUrl string, update Update) error {
 	var botMessage BotMessage
 	botMessage.ChatId = update.Message.Chat.ChatId
-	botMessage.Text = update.Message.Text
+	videoUrl, err := imdb.GetVideo(update.Message.Text)
+	if err != nil {
+		return err
+	}
+	botMessage.Text = videoUrl
 	buf, err := json.Marshal(botMessage)
 	if err != nil {
 		return err
